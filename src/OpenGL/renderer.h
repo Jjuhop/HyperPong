@@ -25,6 +25,8 @@ public:
 	inline int GetWindowWidth() const { auto [w, h] = GetWindowSize(); return w; }
 	inline int GetWindowHeight() const { auto [w, h] = GetWindowSize(); return h; }
 
+	Vec2 GetMousePos() const;
+
 	// * Setters *
 
 	void ClearBG(float r, float g, float b, float a = 1.0f);

@@ -107,6 +107,23 @@ public:
 		}
 		return Matrix<T, width2, heigth>(data);
 	}
+	// * scalar
+	Matrix<T, width, heigth> operator*(T scalar) {
+		Matrix<T, width, heigth> ret = *this;
+		for (size_t i = 0; i < width * heigth; i++) {
+			ret[i] *= scalar;
+		}
+		return ret;
+	}
+
+	// length (defined for all, not just vectors)
+	float length() {
+		float sqSum = 0.0f;
+		for (size_t i = 0; i < width * heigth; i++) {
+			sqSum += m_Values[i] * m_Values[i];
+		}
+		return std::sqrtf(sqSum);
+	}
 
 	// Inversion
 	Matrix<T, width, heigth> Invert() const {
@@ -155,13 +172,7 @@ public:
 		return ret;
 	}
 
-	Matrix<T, width, heigth> operator*(T scalar) {
-		Matrix<T, width, heigth> ret = *this;
-		for (size_t i = 0; i < width * heigth; i++) {
-			ret[i] *= scalar;
-		}
-		return ret;
-	}
+	
 
 	friend Matrix<T, width, heigth>& operator*(const Matrix<T, width, heigth>& m, T scalar);
 

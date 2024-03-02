@@ -37,6 +37,9 @@ Renderer::Renderer(int w, int h, const char* title)
 {
     m_initSuccess = this->Init(w, h, title);
     m_shaderStorage.Init();
+
+    m_firstTimePoint = std::chrono::steady_clock::now();
+    m_lastTimePoint = std::chrono::steady_clock::now();
 }
 
 Renderer::~Renderer()
@@ -71,6 +74,13 @@ std::pair<int, int> Renderer::GetWindowSize() const
     int w, h;
     glfwGetWindowSize(m_window, &w, &h);
     return std::make_pair(w, h);
+}
+
+Vec2 Renderer::GetMousePos() const
+{
+    double x, y;
+    glfwGetCursorPos(m_window, &x, &y);
+    return Vec2({static_cast<float>(x), static_cast<float>(this->GetWindowHeight() - y)});
 }
 
 void Renderer::ClearBG(float r, float g, float b, float a)
@@ -113,8 +123,9 @@ void Renderer::BackGroundShader(BaseShader type, Vec2 highlightPos)
 
     m_shaderStorage.Bind(type);
     if (type == Sh_Background)
-        m_shaderStorage.GetShader(Sh_Background).SetUniform1f("u_Offset", this->GetElapsedSecs());
-        m_shaderStorage.GetShader(Sh_Background).SetUniform2f("u_HighlightPos", normalizedPos[0], normalizedPos[1]);
+        m_shaderStorage.GetShader(Sh_Background).SetUniform1f("u_Time", this->GetElapsedSecs());
+        m_shaderStorage.GetShader(Sh_Background).SetUniform2f("u_HighlightPos", highlightPos[0], highlightPos[1]);
+        m_shaderStorage.GetShader(Sh_Background).SetUniform2f("u_WindDim", static_cast<float>(wi), static_cast<float>(hi));
     glBindVertexArray(m_va);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
