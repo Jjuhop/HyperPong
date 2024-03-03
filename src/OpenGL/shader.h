@@ -40,6 +40,7 @@ enum BaseShader
 {
 	Sh_WhiteFill = 0,
 	Sh_ColorFill,
+	Sh_BlackHole,
 	Sh_Background,
 	BaseShader_COUNT
 };
@@ -63,6 +64,7 @@ private:
 	static constexpr std::array<std::pair<const char*, const char*>, BaseShader_COUNT> s_baseShaderPaths = {
 		std::make_pair("C:/Omat/Koodailu/Pong/src/res/shaders/whiteFill.frag", ""),
 		{"C:/Omat/Koodailu/Pong/src/res/shaders/colorFill.frag", ""},
+		{"C:/Omat/Koodailu/Pong/src/res/shaders/blackHole.frag", ""},
 		{"C:/Omat/Koodailu/Pong/src/res/shaders/background.frag", ""}
 	};
 };

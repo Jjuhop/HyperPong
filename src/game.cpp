@@ -1,8 +1,8 @@
 #include "game.h"
 #include "Utils/logger.h"
 
-#define WIDTH 1200
-#define HEIGHT 800
+#define WIDTH 1920
+#define HEIGHT 1080
 
 Game::Game()
     : m_renderer(WIDTH, HEIGHT, "Jaa")
@@ -151,6 +151,9 @@ int Game::Run()
         Vec2 bar1mid({ 2 * dotRad, bar1y });
         Vec2 barCornOffset({ dotRad, barH });
         m_renderer.DrawRect(bar1mid - barCornOffset, bar1mid + barCornOffset);
+
+        Vec2 bhSize({ 69.f, 69.f });
+        m_renderer.DrawRectSh(bhPos - bhSize, bhPos + bhSize, Sh_BlackHole);
 
         m_renderer.SwapAndPoll();
     }

@@ -109,21 +109,23 @@ void Renderer::BackGroundShader(BaseShader type, Vec2 highlightPos)
         2, 3, 0
     };
     float vertices[] = {
-        -1.0f, -1.0f,
-         1.0f, -1.0f,
-         1.0f,  1.0f,
-        -1.0f,  1.0f
+        -1.0f, -1.0f, 0.0f, 0.0f,
+         1.0f, -1.0f, 1.0f, 0.0f,
+         1.0f,  1.0f, 1.0f, 1.0f,
+        -1.0f,  1.0f, 0.0f, 1.0f
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vb);
-    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 16 * sizeof(float), vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 
     glBindVertexArray(m_va);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)8);
 
     m_shaderStorage.Bind(type);
     if (type == Sh_Background)
@@ -160,24 +162,69 @@ void Renderer::DrawRect(Vec2 llPix, Vec2 urPix, Vec4 c)
         2, 3, 0
     };
     float vertices[] = {
-        ll[0], ll[1],
-        ur[0], ll[1],
-        ur[0], ur[1],
-        ll[0], ur[1]
+        ll[0], ll[1], 0.0f, 0.0f,
+        ur[0], ll[1], 1.0f, 0.0f,
+        ur[0], ur[1], 1.0f, 1.0f,
+        ll[0], ur[1], 0.0f, 1.0f
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vb);
-    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 16 * sizeof(float), vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 
     glBindVertexArray(m_va);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)8);
 
     m_shaderStorage.Bind(Sh_ColorFill);
     m_shaderStorage.GetShader(Sh_ColorFill).SetUniform4f("u_Color", c[0], c[1], c[2], c[3]);
+    glBindVertexArray(m_va);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+}
+
+void Renderer::DrawRectSh(Vec2 llPix, Vec2 urPix, BaseShader sh)
+{
+    auto [wi, hi] = this->GetWindowSize();
+    Mat2 scale({
+        2.0f / wi, 0.0f,
+        0.0f, 2.0f / hi
+        });
+    Vec2 trans({ -1.0f, -1.0f });
+
+    Vec2 ll = (scale * llPix) + trans;
+    Vec2 ur = (scale * urPix) + trans;
+
+    uint32_t indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    float vertices[] = {
+        ll[0], ll[1], 0.0f, 0.0f,
+        ur[0], ll[1], 1.0f, 0.0f,
+        ur[0], ur[1], 1.0f, 1.0f,
+        ll[0], ur[1], 0.0f, 1.0f
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_vb);
+    glBufferData(GL_ARRAY_BUFFER, 16 * sizeof(float), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+
+    glBindVertexArray(m_va);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)8);
+
+    m_shaderStorage.Bind(sh);
+    if (sh == Sh_BlackHole)
+        m_shaderStorage.GetShader(Sh_BlackHole).SetUniform1f("u_Time", this->GetElapsedSecs());
     glBindVertexArray(m_va);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
@@ -200,13 +247,16 @@ bool Renderer::Init(int w, int h, const char* title)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    glfwWindowHint(GLFW_POSITION_X, 80);
+    glfwWindowHint(GLFW_POSITION_Y, 80);
+   
     /* Create a windowed mode window and its OpenGL context */
-
     m_window = glfwCreateWindow(w, h, title, NULL, NULL);
     if (!m_window) {
         glfwTerminate();
         return false;
     }
+    //glfwSetWindowPos(m_window, 80, 80);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(m_window);

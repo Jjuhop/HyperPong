@@ -53,13 +53,13 @@ const float coef = 1.0 / sqrt(2 * 3.14159265359);
 void main() {
   float change = u_Time * 50;
   vec2 pix = (v_Position.xy + 1.0) * u_WindDim * 0.5;
-	vec3 c = vec3(perlin(pix + vec2(change, 0.0), 200.0), perlin(pix + vec2(0.0, change), 150), perlin(pix + change - 0.7, 250));
+	vec3 c = vec3(perlin(pix + vec2(change, 0.0), 500.0), perlin(pix + vec2(0.0, change), 400), perlin(pix + change - 0.7, 800));
 	//float d = max(1.0, length(u_HighlightPos - pix) * 0.01);
 	//float d = length(u_HighlightPos - pix) * 0.01;
   //float dimming = coef * exp(-d*d * 0.5);
 	float d = length(u_HighlightPos - pix);
-  float dimming = 1.0 - smoothstep(0, 250, d) * 0.9;
+  float dimming = 1.0 - smoothstep(0, 250, d) * 0.75;
 	
-	color = vec4(c * max(dimming, 0.0), 1.0);
+	color = vec4(c * max(dimming, 0.1), 1.0);
 	//color = vec4(max(dimming, 0.02), 0.0, 0.0, 1.0);
 }

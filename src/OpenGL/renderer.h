@@ -38,7 +38,8 @@ public:
 
 	void SwapAndPoll();
 
-	void DrawRect(Vec2 ul, Vec2 lr, Vec4 c = Vec4({1.f, 1.f, 1.f, 1.f}));
+	void DrawRect(Vec2 ll, Vec2 ur, Vec4 c = Vec4({1.f, 1.f, 1.f, 1.f}));
+    void DrawRectSh(Vec2 ll, Vec2 ur, BaseShader sh);
 
 private:
 	bool m_initSuccess;
