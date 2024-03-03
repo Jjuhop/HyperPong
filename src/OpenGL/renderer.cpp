@@ -59,7 +59,6 @@ bool Renderer::WindowShouldClose()
     auto dur = curTime - m_lastTimePoint;
     m_lastTimePoint = curTime;
     m_prevFrameTime = static_cast<float>(dur.count()) / 1e9f;
-
     return glfwWindowShouldClose(m_window);
 }
 
@@ -81,6 +80,11 @@ Vec2 Renderer::GetMousePos() const
     double x, y;
     glfwGetCursorPos(m_window, &x, &y);
     return Vec2({static_cast<float>(x), static_cast<float>(this->GetWindowHeight() - y)});
+}
+
+bool Renderer::IsKeyDown(Key key)
+{
+    return glfwGetKey(m_window, key) == GLFW_PRESS;
 }
 
 void Renderer::ClearBG(float r, float g, float b, float a)
@@ -237,5 +241,3 @@ bool Renderer::Init(int w, int h, const char* title)
 
     return true;
 }
-
-

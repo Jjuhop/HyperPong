@@ -68,7 +68,7 @@ public:
 
 	// Mathematical operators
 	// +
-	Matrix<T, width, heigth> operator+(const Matrix<T, width, heigth>& other) {
+	Matrix<T, width, heigth> operator+(const Matrix<T, width, heigth>& other) const {
 		T data[width * heigth] = { 0 };
 		for (size_t i = 0; i < width * heigth; i++) {
 			data[i] = m_Values[i] + other.m_Values[i];
@@ -76,7 +76,7 @@ public:
 		return Matrix<T, width, heigth>(data);
 	}
 	// Unary negation
-	Matrix<T, width, heigth> operator-() {
+	Matrix<T, width, heigth> operator-() const {
 		T data[width * heigth] = { 0 };
 		for (size_t i = 0; i < width * heigth; i++) {
 			data[i] = -m_Values[i];
@@ -84,7 +84,7 @@ public:
 		return Matrix<T, width, heigth>(data);
 	}
 	// -
-	Matrix<T, width, heigth> operator-(const Matrix<T, width, heigth>& other) {
+	Matrix<T, width, heigth> operator-(const Matrix<T, width, heigth>& other) const {
 		T data[width * heigth] = { 0 };
 		for (size_t i = 0; i < width * heigth; i++) {
 			data[i] = m_Values[i] - other.m_Values[i];
@@ -93,7 +93,7 @@ public:
 	}
 	// * Matrix
 	template<uint16_t width2>
-	Matrix<T, width2, heigth> operator*(const Matrix<T, width2, width>& other) {
+	Matrix<T, width2, heigth> operator*(const Matrix<T, width2, width>& other) const {
 		constexpr uint16_t heigth2 = width;
 		const T* o_Values = other.GetData();
 		T data[width2 * heigth] = { 0 };
@@ -108,7 +108,7 @@ public:
 		return Matrix<T, width2, heigth>(data);
 	}
 	// * scalar
-	Matrix<T, width, heigth> operator*(T scalar) {
+	Matrix<T, width, heigth> operator*(T scalar) const {
 		Matrix<T, width, heigth> ret = *this;
 		for (size_t i = 0; i < width * heigth; i++) {
 			ret[i] *= scalar;
@@ -117,12 +117,26 @@ public:
 	}
 
 	// length (defined for all, not just vectors)
-	float length() {
+	float length() const {
 		float sqSum = 0.0f;
 		for (size_t i = 0; i < width * heigth; i++) {
 			sqSum += m_Values[i] * m_Values[i];
 		}
 		return std::sqrtf(sqSum);
+	}
+	// square of length (defined for all, not just vectors)
+	float lengthSqr() const {
+		float sqSum = 0.0f;
+		for (size_t i = 0; i < width * heigth; i++) {
+			sqSum += m_Values[i] * m_Values[i];
+		}
+		return sqSum;
+	}
+
+	// A normalized vec version (defined for all, not just vectors)
+	Matrix<T, width, heigth> normalized() const {
+		const float coef = 1.f / this->length();
+		return (*this) * coef;
 	}
 
 	// Inversion
@@ -174,7 +188,7 @@ public:
 
 	
 
-	friend Matrix<T, width, heigth>& operator*(const Matrix<T, width, heigth>& m, T scalar);
+	//friend Matrix<T, width, heigth>& operator*(const Matrix<T, width, heigth>& m, T scalar);
 
 	static inline Matrix<T, width, width> Identity() {
 		static_assert(width == heigth);
@@ -189,14 +203,14 @@ private:
 	T m_Values[width * heigth];
 };
 
-template<typename T, uint16_t width, uint16_t heigth>
-Matrix<T, width, heigth>& operator*(const Matrix<T, width, heigth>& m, T scalar) {
-	Matrix<T, width, heigth> ret = m;
-	for (size_t i = 0; i < width * heigth; i++) {
-		ret[i] *= scalar;
-	}
-	return ret;
-}
+//template<typename T, uint16_t width, uint16_t heigth>
+//Matrix<T, width, heigth>& operator*(const Matrix<T, width, heigth>& m, T scalar) {
+//	Matrix<T, width, heigth> ret = m;
+//	for (size_t i = 0; i < width * heigth; i++) {
+//		ret[i] *= scalar;
+//	}
+//	return ret;
+//}
 
 template<typename T, uint16_t width, uint16_t heigth>
 std::ostream& operator<<(std::ostream& os, const Matrix<T, width, heigth>& mat) {
