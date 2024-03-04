@@ -41,6 +41,8 @@ public:
 	void DrawRect(Vec2 ll, Vec2 ur, Vec4 c = Vec4({1.f, 1.f, 1.f, 1.f}));
     void DrawRectSh(Vec2 ll, Vec2 ur, BaseShader sh);
 
+    inline void ResetShaders() { m_shaderStorage.Init(); }
+
 private:
 	bool m_initSuccess;
 	GLFWwindow* m_window;

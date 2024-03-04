@@ -9,6 +9,11 @@ Shader::Shader()
 	: m_id(0)
 { }
 
+Shader::~Shader()
+{
+	glDeleteProgram(m_id);
+}
+
 void Shader::Init(const std::string& fragFile)
 {
 	std::string fragSrc;
@@ -41,11 +46,6 @@ void Shader::Init(const std::string& fragFile, const std::string& vertFile)
 	bool vRead = this->LoadFileToString(vertSrc, vertFile);
 	if (fRead && vRead)
 		m_id = this->CreateShader(fragSrc, vertSrc);
-}
-
-Shader::~Shader()
-{
-	glDeleteProgram(m_id);
 }
 
 

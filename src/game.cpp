@@ -49,6 +49,8 @@ int Game::Run()
     Vec2 bhPos({0.5f * wBase, 0.5f * hBase});
     constexpr float bhMass = 0.03f;
 
+    bool r_down = false;
+
     while (!m_renderer.WindowShouldClose()) {
         m_renderer.ClearBG(0.0f, 0.0f, 0.0f);
         m_renderer.BackGroundShader(Sh_Background, dotPos);
@@ -56,7 +58,7 @@ int Game::Run()
         float dt = m_renderer.GetFrameTime();
         Vec2 curs = m_renderer.GetMousePos();
         counter++;
-        if (counter >= 700 || dt > 1.f/60.f) {
+        if (counter >= 5000 || dt > 1.f/60.f) {
             counter = 0;
             GAME_INFO(std::format("Frame time {:.5f}s, ({:.0f} FPS), elapsed {:.5f}s", dt, 1.f / dt, m_renderer.GetElapsedSecs()));
             GAME_INFO(std::format("Mouse at ({}, {}), dot at ({}, {}), dot speed {}", curs[0], curs[1], dotPos[0], dotPos[1], dotVel.length()));
@@ -69,7 +71,13 @@ int Game::Run()
             hBase = h;
         }
 
-        dotPos = dotPos + (dotVel * dt * 1000);
+        if (m_renderer.IsKeyDown(KEY_R) && !r_down) {
+            m_renderer.ResetShaders();
+            GAME_INFO("Resetting shaders");
+        }
+        r_down = m_renderer.IsKeyDown(KEY_R);
+
+        //dotPos = dotPos + (dotVel * dt * 1000);
         
         
         if (m_renderer.IsKeyDown(KEY_UP)) {
@@ -89,7 +97,7 @@ int Game::Run()
         Vec2 bhDiff = (bhPos - dotPos) * 0.001f;    // Normalized to meters
         float bhDistSq = std::max(bhDiff.lengthSqr(), 1e-4f);
         Vec2 bhAcc = bhDiff.normalized() * (bhMass / bhDistSq);
-        dotVel = dotVel + bhAcc * std::min(dt, 1.f/60.f);
+        //dotVel = dotVel + bhAcc * std::min(dt, 1.f/60.f);
 
         // Attraction to cursor
         //Vec2 diff = curs - dotPos;
@@ -147,12 +155,12 @@ int Game::Run()
             dotVel[0] = -std::abs(dotVel[0]);
 
         
-        m_renderer.DrawRect( dotPos - rVec, dotPos + rVec, Vec4({dotVel[0] / dotSpeed, dotVel[1] / dotSpeed, dotPos[1] / h, 1.0f}));
+        //m_renderer.DrawRect( dotPos - rVec, dotPos + rVec, Vec4({dotVel[0] / dotSpeed, dotVel[1] / dotSpeed, dotPos[1] / h, 1.0f}));
         Vec2 bar1mid({ 2 * dotRad, bar1y });
         Vec2 barCornOffset({ dotRad, barH });
-        m_renderer.DrawRect(bar1mid - barCornOffset, bar1mid + barCornOffset);
+        //m_renderer.DrawRect(bar1mid - barCornOffset, bar1mid + barCornOffset);
 
-        Vec2 bhSize({ 69.f, 69.f });
+        Vec2 bhSize({ 88.f, 88.f });
         m_renderer.DrawRectSh(bhPos - bhSize, bhPos + bhSize, Sh_BlackHole);
 
         m_renderer.SwapAndPoll();
