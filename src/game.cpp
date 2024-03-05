@@ -17,7 +17,6 @@ int Game::Run()
     GAME_INFO("Game started");
 
     int wBase = WIDTH, hBase = HEIGHT;
-    int counter = 0;
 
     constexpr float dotRad = 10.f;
     constexpr float dotSpeed = 1.f;
@@ -39,8 +38,9 @@ int Game::Run()
     // Bars
     constexpr float barH = 7 * dotRad;
     constexpr float barIndent = 3 * dotRad; // This is where the collisions happens
-    constexpr float barAcc = 4000.f;
-    constexpr float barMaxSpeed = 690.f;
+    constexpr float barAcc = 6000.f;
+    constexpr float barMaxSpeed = 1200.f;
+    constexpr float barYVelTransferCoef = 0.04 * 0.001f;
 
     float bar1y = 0.5f * hBase, bar1yv = 0.0f;
     float bar2y = 0.5f * hBase, bar2yv = 0.0f;
@@ -48,8 +48,11 @@ int Game::Run()
     // Black hole in the middle
     Vec2 bhPos({0.5f * wBase, 0.5f * hBase});
     constexpr float bhMass = 0.03f;
+    constexpr float bhSize = 88.f;
 
-    bool r_down = false;
+    bool r_down = false, i_down = false;
+
+    bool isTwoPlayer = true;
 
     while (!m_renderer.WindowShouldClose()) {
         m_renderer.ClearBG(0.0f, 0.0f, 0.0f);
@@ -57,12 +60,13 @@ int Game::Run()
 
         float dt = m_renderer.GetFrameTime();
         Vec2 curs = m_renderer.GetMousePos();
-        counter++;
-        if (counter >= 5000 || dt > 1.f/60.f) {
-            counter = 0;
+
+        // Info stuff
+        if (m_renderer.IsKeyDown(KEY_I) && !i_down || dt > 1.f / 30.f) {
             GAME_INFO(std::format("Frame time {:.5f}s, ({:.0f} FPS), elapsed {:.5f}s", dt, 1.f / dt, m_renderer.GetElapsedSecs()));
             GAME_INFO(std::format("Mouse at ({}, {}), dot at ({}, {}), dot speed {}", curs[0], curs[1], dotPos[0], dotPos[1], dotVel.length()));
         }
+        i_down = m_renderer.IsKeyDown(KEY_I);
 
         auto [w, h] = m_renderer.GetWindowSize();
         if (w != wBase || h != hBase) {
@@ -71,33 +75,50 @@ int Game::Run()
             hBase = h;
         }
 
+        // Shader reset
+
         if (m_renderer.IsKeyDown(KEY_R) && !r_down) {
             m_renderer.ResetShaders();
             GAME_INFO("Resetting shaders");
         }
         r_down = m_renderer.IsKeyDown(KEY_R);
 
-        //dotPos = dotPos + (dotVel * dt * 1000);
+        // Select 1/2 player mode
+        if (m_renderer.IsKeyDown(KEY_1))
+            isTwoPlayer = false;
+        else if (m_renderer.IsKeyDown(KEY_2))
+            isTwoPlayer = true;
         
-        
-        if (m_renderer.IsKeyDown(KEY_UP)) {
+        // Player 1 (left) controls
+        if (m_renderer.IsKeyDown(KEY_W) || (!isTwoPlayer && m_renderer.IsKeyDown(KEY_UP))) {
             bar1yv = std::min(bar1yv + barAcc * dt, barMaxSpeed);
-        } else if (m_renderer.IsKeyDown(KEY_DOWN)) {
+        } else if (m_renderer.IsKeyDown(KEY_S) || (!isTwoPlayer && m_renderer.IsKeyDown(KEY_DOWN))) {
             bar1yv = std::max(bar1yv - barAcc * dt, -barMaxSpeed);
         } else {
             // Braking
-            bar1yv *= 0.93f;
+            bar1yv *= std::powf(0.93f, dt * 144.f);
         }
         bar1y += bar1yv * dt;
 
-        // Gravity
+        // Player 2 (right) controls
+        if (isTwoPlayer && m_renderer.IsKeyDown(KEY_UP)) {
+            bar2yv = std::min(bar2yv + barAcc * dt, barMaxSpeed);
+        } else if (isTwoPlayer && m_renderer.IsKeyDown(KEY_DOWN)) {
+            bar2yv = std::max(bar2yv - barAcc * dt, -barMaxSpeed);
+        } else {
+            // Braking
+            bar2yv *= std::powf(0.93f, dt * 144.f);
+        }
+        bar2y += bar2yv * dt;
+
+        // Gravity (Downwards)
         //dotVel = dotVel + (gravity * dt);
 
-        // Attraction to black hole
-        Vec2 bhDiff = (bhPos - dotPos) * 0.001f;    // Normalized to meters
-        float bhDistSq = std::max(bhDiff.lengthSqr(), 1e-4f);
+        // Gravity towards black hole
+        Vec2 bhDiff = (bhPos - dotPos) * 0.001f;                // Normalized to meters
+        float bhDistSq = std::max(bhDiff.lengthSqr(), 1e-4f);   // Add small min value to prevent huge accelerations
         Vec2 bhAcc = bhDiff.normalized() * (bhMass / bhDistSq);
-        //dotVel = dotVel + bhAcc * std::min(dt, 1.f/60.f);
+        dotVel = dotVel + bhAcc * dt;
 
         // Attraction to cursor
         //Vec2 diff = curs - dotPos;
@@ -106,13 +127,13 @@ int Game::Run()
         //Vec2 acc = diff * activeDist * strength;
         //dotVel = (dotVel + (acc * std::min(dt, 1 / 60.f)));
         
-        // Air res
-        constexpr float airRes = 1.f;
+        // Air res at larger speeds to slow the dot down
+        constexpr float airResCoef = 1.f;
         constexpr float mass = 5.f;
         constexpr float eps = 1e-9f;
         float dotSp = dotVel.length();
         if (dotSp > 3.f) {
-            float newSp = dotSp < eps ? 0.f : mass / ((mass / dotSp + dt) * airRes);
+            float newSp = mass / ((mass / (dotSp * airResCoef) + dt) * airResCoef);
             dotVel = dotVel * (newSp / dotSp);
         }
 
@@ -122,7 +143,7 @@ int Game::Run()
         if (dotPos[1] > static_cast<float>(h) - dotRad)
             dotVel[1] = -std::abs(dotVel[1]);
 
-        // Collisions with bars
+        // Collisions with player 1 bar (left)
         if (dotPos[0] < barIndent + dotRad) {
             // Check the corners
             if (dotPos[1] > bar1y + barH) {
@@ -131,37 +152,85 @@ int Game::Run()
                 Vec2 dotCorn = dotPos - rVec;
                 Vec2 diffNorm = (dotCorn - barCorn).normalized();
                 Vec2 velNorm = dotVel.normalized();
-                if (velNorm[1] >= diffNorm[1])
+                if (velNorm[1] >= diffNorm[1]) {
                     dotVel[0] = std::abs(dotVel[0]);
-                else if (dotPos[1] - dotRad <= bar1y + barH)
+                    dotVel[1] += bar1yv * barYVelTransferCoef;
+                } else if (dotPos[1] - dotRad <= bar1y + barH) {
                     dotVel[1] = std::abs(dotVel[1]);    // Top hit
+                }
             } else if (dotPos[1] < bar1y - barH) {
                 // Lower right corner of bar should be checked more carefully
                 Vec2 barCorn({ barIndent, bar1y - barH });
                 Vec2 dotCorn = dotPos + Vec2({ -dotRad, dotRad });
                 Vec2 diffNorm = (dotCorn - barCorn).normalized();
                 Vec2 velNorm = dotVel.normalized();
-                if (velNorm[1] <= diffNorm[1])
+                if (velNorm[1] <= diffNorm[1]) {
                     dotVel[0] = std::abs(dotVel[0]);
-                else if (dotPos[1] + dotRad >= bar1y - barH)
+                    dotVel[1] += bar1yv * barYVelTransferCoef;
+                } else if (dotPos[1] + dotRad >= bar1y - barH) {
                     dotVel[1] = -std::abs(dotVel[1]);    // Bottom hit
+                }
             } else {
                 // Clear hit
                 dotVel[0] = std::abs(dotVel[0]);
+                dotVel[1] += bar1yv * barYVelTransferCoef;
             }
         }
 
-        if (dotPos[0] >= static_cast<float>(wBase) - dotRad)
+        if (isTwoPlayer && dotPos[0] > static_cast<float>(wBase) - barIndent - dotRad) {
+            // Collisions on the right
+            // Check the corners
+            if (dotPos[1] > bar2y + barH) {
+                // Upper left corner of bar should be checked more carefully
+                Vec2 barCorn({ static_cast<float>(wBase) - barIndent, bar2y + barH });
+                Vec2 dotCorn = dotPos + Vec2({ dotRad, -dotRad });
+                Vec2 diffNorm = (dotCorn - barCorn).normalized();
+                Vec2 velNorm = dotVel.normalized();
+                if (velNorm[1] >= diffNorm[1]) {
+                    dotVel[0] = -std::abs(dotVel[0]);
+                    dotVel[1] += bar2yv * barYVelTransferCoef;
+                } else if (dotPos[1] - dotRad <= bar2y + barH) {
+                    dotVel[1] = std::abs(dotVel[1]);    // Top hit
+                }
+            } else if (dotPos[1] < bar2y - barH) {
+                // Lower left corner of bar should be checked more carefully
+                Vec2 barCorn({ static_cast<float>(wBase) - barIndent, bar2y - barH });
+                Vec2 dotCorn = dotPos + rVec;
+                Vec2 diffNorm = (dotCorn - barCorn).normalized();
+                Vec2 velNorm = dotVel.normalized();
+                if (velNorm[1] <= diffNorm[1]) {
+                    dotVel[0] = -std::abs(dotVel[0]);
+                    dotVel[1] += bar2yv * barYVelTransferCoef;
+                } else if (dotPos[1] + dotRad >= bar2y - barH) {
+                    dotVel[1] = -std::abs(dotVel[1]);    // Bottom hit
+                }
+            } else {
+                // Clear hit
+                dotVel[0] = -std::abs(dotVel[0]);
+                dotVel[1] += bar2yv * barYVelTransferCoef;
+            }
+        } else if (dotPos[0] >= static_cast<float>(wBase) - dotRad) {
+            // Single player game
             dotVel[0] = -std::abs(dotVel[0]);
+        }
 
+        // Adjust dot position according to velocity (turn the unit from meters to pix)
+        dotPos = dotPos + (dotVel * dt * 1000);
         
-        //m_renderer.DrawRect( dotPos - rVec, dotPos + rVec, Vec4({dotVel[0] / dotSpeed, dotVel[1] / dotSpeed, dotPos[1] / h, 1.0f}));
+        // Draw the dot and bars
+        m_renderer.DrawRect( dotPos - rVec, dotPos + rVec, Vec4({dotVel[0] / dotSpeed, dotVel[1] / dotSpeed, dotPos[1] / h, 1.0f}));
+        
         Vec2 bar1mid({ 2 * dotRad, bar1y });
         Vec2 barCornOffset({ dotRad, barH });
-        //m_renderer.DrawRect(bar1mid - barCornOffset, bar1mid + barCornOffset);
+        m_renderer.DrawRect(bar1mid - barCornOffset, bar1mid + barCornOffset);
 
-        Vec2 bhSize({ 88.f, 88.f });
-        m_renderer.DrawRectSh(bhPos - bhSize, bhPos + bhSize, Sh_BlackHole);
+        if (isTwoPlayer) {
+            Vec2 bar2mid({ static_cast<float>(wBase) - 2 * dotRad, bar2y });
+            m_renderer.DrawRect(bar2mid - barCornOffset, bar2mid + barCornOffset);
+        }
+
+        Vec2 bhSizeVec({ bhSize, bhSize });
+        m_renderer.DrawRectSh(bhPos - bhSizeVec, bhPos + bhSizeVec, Sh_BlackHole);
 
         m_renderer.SwapAndPoll();
     }
