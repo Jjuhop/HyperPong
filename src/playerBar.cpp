@@ -23,7 +23,7 @@ void Bar::Down(float dt)
 
 void Bar::Brake(float dt)
 {
-	m_yVel *= std::powf(0.93f, dt * 144.f);
+	m_yVel *= std::pow(0.93f, dt * 144.f);
 	m_yPos += m_yVel * dt;
 }
 

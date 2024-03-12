@@ -59,6 +59,7 @@ private:
 	LogLevel m_level;
 };
 
+#ifndef NOLOG
 #define RENDERER_TRACE(m) Logger::GetInstRENDERER().Trace(m);
 #define RENDERER_INFO(m) Logger::GetInstRENDERER().Info(m);
 #define RENDERER_WARN(m) Logger::GetInstRENDERER().Warn(m);
@@ -70,6 +71,20 @@ private:
 #define GAME_WARN(m) Logger::GetInstGAME().Warn(m);
 #define GAME_ERROR(m) Logger::GetInstGAME().Error(m);
 #define GAME_FATAL(m) Logger::GetInstGAME().FatalError(m);
+#else
+#define RENDERER_TRACE(m)
+#define RENDERER_INFO(m)
+#define RENDERER_WARN(m)
+#define RENDERER_ERROR(m)
+#define RENDERER_FATAL(m)
+
+#define GAME_TRACE(m)
+#define GAME_INFO(m)
+#define GAME_WARN(m)
+#define GAME_ERROR(m)
+#define GAME_FATAL(m)
+#endif
+
 
 #ifdef _MSC_VER
 
