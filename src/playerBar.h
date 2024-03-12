@@ -29,5 +29,5 @@ private:
     static constexpr float s_maxSpeed = 1200.f;
 public:
     static constexpr float s_height = 7 * s_size;
-    static constexpr float s_velTransferCoef = 0.04 * 0.001f;
+    static constexpr float s_velTransferCoef = 0.04f * 0.001f;
 };
