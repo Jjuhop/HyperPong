@@ -4,7 +4,7 @@
 add_executable (${PROJECT_NAME} "main.cpp" "game.cpp" "game.h"
 	"Utils/logger.cpp" "Utils/logger.h" "Utils/matrix.cpp" "Utils/matrix.h"
 	"OpenGL/renderer.cpp" "OpenGL/renderer.h"
- "OpenGL/shader.cpp" "OpenGL/shader.h")
+ "OpenGL/shader.cpp" "OpenGL/shader.h" "projectile.cpp" "projectile.h" "playerBar.cpp" "playerBar.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)

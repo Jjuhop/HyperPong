@@ -4,6 +4,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 project("GravityPong")
+set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo" CACHE STRING "My multi config types" FORCE)
 
 # Include sub-projects.
 add_subdirectory("src")

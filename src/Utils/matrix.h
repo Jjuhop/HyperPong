@@ -75,6 +75,14 @@ public:
 		}
 		return Matrix<T, width, heigth>(data);
 	}
+	// + scalar (widens it sufficiently)
+	Matrix<T, width, heigth> operator+(T scalar) const {
+		T data[width * heigth] = { 0 };
+		for (size_t i = 0; i < width * heigth; i++) {
+			data[i] = m_Values[i] + scalar;
+		}
+		return Matrix<T, width, heigth>(data);
+	}
 	// Unary negation
 	Matrix<T, width, heigth> operator-() const {
 		T data[width * heigth] = { 0 };
@@ -88,6 +96,14 @@ public:
 		T data[width * heigth] = { 0 };
 		for (size_t i = 0; i < width * heigth; i++) {
 			data[i] = m_Values[i] - other.m_Values[i];
+		}
+		return Matrix<T, width, heigth>(data);
+	}
+	// - scalar (widens it sufficiently)
+	Matrix<T, width, heigth> operator-(T scalar) const {
+		T data[width * heigth] = { 0 };
+		for (size_t i = 0; i < width * heigth; i++) {
+			data[i] = m_Values[i] - scalar;
 		}
 		return Matrix<T, width, heigth>(data);
 	}

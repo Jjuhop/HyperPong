@@ -128,10 +128,11 @@ void Renderer::BackGroundShader(BaseShader type, Vec2 highlightPos)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)8);
 
     m_shaderStorage.Bind(type);
-    if (type == Sh_Background)
+    if (type == Sh_Background) {
         m_shaderStorage.GetShader(Sh_Background).SetUniform1f("u_Time", this->GetElapsedSecs());
         m_shaderStorage.GetShader(Sh_Background).SetUniform2f("u_HighlightPos", highlightPos[0], highlightPos[1]);
         m_shaderStorage.GetShader(Sh_Background).SetUniform2f("u_WindDim", static_cast<float>(wi), static_cast<float>(hi));
+    }
     glBindVertexArray(m_va);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ib);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
@@ -232,6 +233,7 @@ void Renderer::DrawRectSh(Vec2 llPix, Vec2 urPix, BaseShader sh)
 
 void WindResizeCallback(GLFWwindow* wnd, int32_t w, int32_t h) {
     glViewport(0, 0, w, h);
+    RENDERER_INFO(std::format("Window resized, new size {}x{}", w, h));
 }
 
 bool Renderer::Init(int w, int h, const char* title)
@@ -256,7 +258,6 @@ bool Renderer::Init(int w, int h, const char* title)
         glfwTerminate();
         return false;
     }
-    //glfwSetWindowPos(m_window, 80, 80);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(m_window);

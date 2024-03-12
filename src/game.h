@@ -2,8 +2,6 @@
 
 #include "OpenGL/renderer.h"
 
-struct GLFWwindow;
-
 class Game
 {
 public:
