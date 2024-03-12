@@ -138,7 +138,7 @@ public:
 		for (size_t i = 0; i < width * heigth; i++) {
 			sqSum += m_Values[i] * m_Values[i];
 		}
-		return std::sqrtf(sqSum);
+		return std::sqrt(sqSum);
 	}
 	// square of length (defined for all, not just vectors)
 	float lengthSqr() const {

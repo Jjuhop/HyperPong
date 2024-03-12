@@ -71,5 +71,20 @@ private:
 #define GAME_ERROR(m) Logger::GetInstGAME().Error(m);
 #define GAME_FATAL(m) Logger::GetInstGAME().FatalError(m);
 
+#ifdef _MSC_VER
+
 #define RENDERER_ASSERT(x, s) { if(!(x)) { RENDERER_ERROR(std::string("Assertion Failed: ") + s); __debugbreak(); } }
 #define GAME_ASSERT(x, s) { if(!(x)) { GAME_ERROR(std::string("Assertion Failed: ") + s); __debugbreak(); } }
+
+#else
+
+#include <signal.h>
+#ifdef SIGTRAP
+#define RENDERER_ASSERT(x, s) { if(!(x)) { RENDERER_ERROR(std::string("Assertion Failed: ") + s); raise(SIGTRAP); } }
+#define GAME_ASSERT(x, s) { if(!(x)) { GAME_ERROR(std::string("Assertion Failed: ") + s); raise(SIGTRAP); } }
+#else
+#define RENDERER_ASSERT(x, s) { if(!(x)) { RENDERER_ERROR(std::string("Assertion Failed: ") + s); raise(SIGABRT); } }
+#define GAME_ASSERT(x, s) { if(!(x)) { GAME_ERROR(std::string("Assertion Failed: ") + s); raise(SIGABRT); } }
+#endif
+
+#endif
